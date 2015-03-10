@@ -23,9 +23,14 @@
 """
 
 import os
-import ConfigParser
 import subprocess
 import sys
+
+#ConfigParser renamed for python3
+try:
+    import ConfigParser
+except ImportError:
+    import configparser as ConfigParser
 
 from gi.repository import Gtk
 from gi.repository import Gdk
@@ -87,8 +92,6 @@ class QUICKWIN(object):
         # load popup window items
         self.popwindow = self.builder.get_object('popup_window')
         self.popbutton = self.builder.get_object('closepop')
-        self.successwindow = self.builder.get_object('success_window')
-        self.successbutton = self.builder.get_object('closesuccess')
         # create lists and connect actions
         self.connectui()
         self.listfiles(self.current_dir)
@@ -98,7 +101,7 @@ class QUICKWIN(object):
         """ connect all the window wisgets """
         # main window actions
         self.window.connect('destroy', self.quit)
-        self.window.connect('key-release-event', self.shortcatch)
+        #self.window.connect('key-release-event', self.shortcatch)
         self.settingsbutton.connect('clicked', self.showconfig)
         self.addbutton.connect('clicked', self.showaddconnection)
         self.closemain.connect('clicked', self.quit)
@@ -112,7 +115,6 @@ class QUICKWIN(object):
         self.closeaddbutton.connect('clicked', self.closeadd)
         # popup window actions
         self.popbutton.connect('clicked', self.closepop)
-        self.successbutton.connect('clicked', self.closesuccess)
         # set up file and folder lists
         cell = Gtk.CellRendererText()
         filecolumn = Gtk.TreeViewColumn('Windows Servers', cell, text=0)
@@ -138,11 +140,11 @@ class QUICKWIN(object):
         #    # not used for loading
         #    # require double clicks self.loadselection()
         if Gdk.ModifierType.BUTTON2_MASK == event.get_state():
-            print 'middle click'
+            print('middle click')
         elif Gdk.ModifierType.BUTTON3_MASK == event.get_state():
-            print 'right click'
+            print('right click')
             #self.popmenu.popup()
-        return
+        return actor
 
     def showme(self, *args):
         """ show a Gtk.Window """
@@ -154,33 +156,35 @@ class QUICKWIN(object):
         self.listfiles(self.current_dir)
         args[0].hide()
 
-    def showconfig(self, *args):
+    def showconfig(self, actor):
         """ fill and show the config window """
-        self.homeentry.set_text(self.homefolder)
-        self.showme(self.confwindow)
-        return
+        if actor == self.settingsbutton:
+            self.homeentry.set_text(self.homefolder)
+            self.showme(self.confwindow)
+        return actor
 
-    def showaddconnection(self, *args):
+    def showaddconnection(self, actor):
         """ show the add connection window """
         self.homeentry.set_text(self.homefolder)
         self.showme(self.addwindow)
-        return
+        return actor
 
-    def saveconf(self, *args):
+    def saveconf(self, actor):
         """ save any config changes and update live settings"""
-        self.conf.read(CONFIG)
-        self.conf.set('conf', 'home', self.homeentry.get_text())
-        self.homefolder = self.homeentry.get_text()
-        # write to conf file
-        conffile = open(CONFIG, "w")
-        self.conf.write(conffile)
-        conffile.close()
+        if actor == self.applybutton:
+            self.conf.read(CONFIG)
+            self.conf.set('conf', 'home', self.homeentry.get_text())
+            self.homefolder = self.homeentry.get_text()
+            # write to conf file
+            conffile = open(CONFIG, "w")
+            self.conf.write(conffile)
+            conffile.close()
         return
 
     def saveadd(self, *args):
         """ save any config changes and update live settings"""
-        print "SAVE ADD"
-        return
+        print("SAVE ADD")
+        return args
 
     def checkconfig(self):
         """ create a default config if not available """
@@ -190,35 +194,28 @@ class QUICKWIN(object):
             conffile.close()
         return
 
-    def closeconf(self, *args):
+    def closeconf(self, actor):
         """ hide the config window """
-        self.hideme(self.confwindow)
+        if actor == self.closebutton:
+            self.hideme(self.confwindow)
         return
 
-    def closeadd(self, *args):
+    def closeadd(self, actor):
         """ hide the config window """
-        self.hideme(self.addwindow)
+        if actor == self.closeaddbutton:
+            self.hideme(self.addwindow)
         return
 
-    def closeerror(self, *args):
-        """ hide the error window """
-        self.popwindow.destroy()
-        Gtk.main_quit(*args)
-        raise Exception('Please install python-eyed3')
-
-    def closepop(self, *args):
+    def closepop(self, actor):
         """ hide the error popup window """
-        self.hideme(self.popwindow)
+        if actor == self.popbutton:
+            self.hideme(self.popwindow)
         return
 
-    def closesuccess(self, *args):
-        """ hide the organise completed window """
-        self.hideme(self.successwindow)
-        return
-
-    def loadselection(self, actor):
+    def loadselection(self, *args):
         """ load selected files into tag editor """
-        model, fileiter = self.contenttree.get_selection().get_selected_rows()
+        contenttree = args[0]
+        model, fileiter = contenttree.get_selection().get_selected_rows()
         self.current_files = []
         for files in fileiter:
             if model[files][0] == '[No RDP shortcuts found]':
@@ -227,10 +224,10 @@ class QUICKWIN(object):
                 tmp_file = self.current_dir + '/' + model[files][0]
                 self.current_files.append(tmp_file)
         if not self.current_files == []:
-            print "OPEN RDP CONNECTION"
+            print("OPEN RDP CONNECTION")
             subprocess.Popen(self.current_files)
         else:
-            print 'relisting directory'
+            print('relisting directory')
             self.listfiles(self.current_dir)
         return
 
@@ -248,11 +245,11 @@ class QUICKWIN(object):
         Gtk.main_quit(*args)
         return False
 
-    def listfiles(self, *args):
+    def listfiles(self, srcpath):
         """ function to fill the file list column """
         self.current_files = []
         try:
-            files_dir = os.listdir(self.current_dir)
+            files_dir = os.listdir(srcpath)
             files_dir.sort(key=lambda y: y.lower())
         except OSError:
             self.listfiles(self.homefolder)

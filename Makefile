@@ -9,9 +9,11 @@ install-req:
 	@cp AUTHORS $(INSTALLPATH) -f
 	@cp LICENSE $(INSTALLPATH) -f
 	@cp bin/quickwin /usr/bin/ -f
+	@cp bin/quickwin3 /usr/bin/ -f
 	@cp share/quickwin.png /usr/share/pixmaps -f
 	@cp share/quickwin.desktop /usr/share/applications/ -f
 	@chmod +x /usr/bin/quickwin
+	@chmod +x /usr/bin/quickwin3
 	@chmod +x /usr/share/quickwin/quickwin.py
 
 install: install-req
