@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# launch quickwin
+/usr/share/quickwin/quickwin.py
