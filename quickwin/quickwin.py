@@ -29,7 +29,6 @@ import sys
 
 from gi.repository import Gtk
 from gi.repository import Gdk
-from gi.repository import GLib
 
 from xdg.BaseDirectory import xdg_config_dirs
 
@@ -91,7 +90,6 @@ class QUICKWIN(object):
         self.successwindow = self.builder.get_object('success_window')
         self.successbutton = self.builder.get_object('closesuccess')
         # create lists and connect actions
-        self.loadlists()
         self.connectui()
         self.listfiles(self.current_dir)
         self.run()
@@ -136,7 +134,6 @@ class QUICKWIN(object):
 
     def button(self, actor, event):
         """ Catch mouse clicks"""
-        print('activate')
         #if Gdk.ModifierType.BUTTON1_MASK == event.get_state():
         #    # not used for loading
         #    # require double clicks self.loadselection()
@@ -149,17 +146,13 @@ class QUICKWIN(object):
 
     def showme(self, *args):
         """ show a Gtk.Window """
+        self.listfiles(self.current_dir)
         args[0].show()
 
     def hideme(self, *args):
         """ hide a Gtk.Window """
-        args[0].hide()
         self.listfiles(self.current_dir)
-
-    def loadlists(self):
-        """ create/empty all the lists used for tagging """
-        print "NO LISTS"
-        return
+        args[0].hide()
 
     def showconfig(self, *args):
         """ fill and show the config window """
@@ -212,7 +205,6 @@ class QUICKWIN(object):
         self.popwindow.destroy()
         Gtk.main_quit(*args)
         raise Exception('Please install python-eyed3')
-        return
 
     def closepop(self, *args):
         """ hide the error popup window """
@@ -224,7 +216,7 @@ class QUICKWIN(object):
         self.hideme(self.successwindow)
         return
 
-    def loadselection(self, *args):
+    def loadselection(self, actor):
         """ load selected files into tag editor """
         model, fileiter = self.contenttree.get_selection().get_selected_rows()
         self.current_files = []
@@ -242,45 +234,11 @@ class QUICKWIN(object):
             self.listfiles(self.current_dir)
         return
 
-    def gohome(self, *args):
-        """ go to the defined home folder """
-        self.clearopenfiles()
-        self.listfolder(self.homefolder)
-
-    def goback(self, *args):
-        """ go back the the previous directory """
-        back_dir = os.path.dirname(self.current_dir)
-        self.clearopenfiles()
-        self.listfolder(back_dir)
-        return
-
-    def keypress(self, actor, event):
-        """ capture backspace key for folder navigation """
-        if event.get_keycode()[1] == 22:
-            self.goback()
-
-    def shortcatch(self, actor, event):
-        """ capture keys for shortcuts """
-        test_mask = (event.state & Gdk.ModifierType.CONTROL_MASK ==
-                     Gdk.ModifierType.CONTROL_MASK)
-        if event.get_state() and test_mask:
-            if event.get_keycode()[1] == 39:
-                self.savetags()
-            if event.get_keycode()[1] == 46:
-                self.loadselection()
-            if event.get_keycode()[1] == 56:
-                self.goback()
-            if event.get_keycode()[1] == 43:
-                self.gohome()
-
-
-    def entrycatch(self, actor, event):
-        """ capture key presses to activate checkboxes """
-        movement_keys = [22, 23, 36, 37, 50, 62, 64, 65, 66,
-                         105, 108, 110, 111, 112, 113,
-                         114, 115, 116, 117, 118, 119]
-        test_mask = (event.state & Gdk.ModifierType.CONTROL_MASK ==
-                     Gdk.ModifierType.CONTROL_MASK)
+    #def shortcatch(self, actor, event):
+    #    """ capture keys for shortcuts """
+    #    test_mask = (event.state & Gdk.ModifierType.CONTROL_MASK ==
+    #                 Gdk.ModifierType.CONTROL_MASK)
+    #    #if event.get_state() and test_mask:
 
     def quit(self, *args):
         """ stop the process thread and close the program"""
@@ -290,16 +248,6 @@ class QUICKWIN(object):
         Gtk.main_quit(*args)
         return False
 
-
-    def clearopenfiles(self):
-        """ clear the tags ui when changing folder """
-        count = 0
-        while count < len(self.uibuttons):
-            self.uibuttons[count][0].set_active(False)
-            self.uibuttons[count][1].set_text('')
-            count = count + 1
-        return
-
     def listfiles(self, *args):
         """ function to fill the file list column """
         self.current_files = []
@@ -307,7 +255,8 @@ class QUICKWIN(object):
             files_dir = os.listdir(self.current_dir)
             files_dir.sort(key=lambda y: y.lower())
         except OSError:
-            self.gohome()
+            self.listfiles(self.homefolder)
+            return
         # clear list if we have scanned before
         for items in self.contentlist:
             self.contentlist.remove(items.iter)
@@ -325,5 +274,4 @@ class QUICKWIN(object):
 
 
 if __name__ == "__main__":
-    GLib.threads_init()
     QUICKWIN()

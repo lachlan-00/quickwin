@@ -10,7 +10,7 @@ I use this as a quick launch window for remote desktop connections
 
 About
 -----
-Run executable files from a list
+Run executable files from a list. Currently this is used just to execute files located in the quickwin folder (depending on conf file.)
 
 
 Recent Updates
