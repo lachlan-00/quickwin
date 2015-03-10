@@ -1,77 +1,33 @@
 ---------------------------------------------
-mytag: Python music tagger and file organiser
+quickWIN: Python file launcher
 ---------------------------------------------
-v1.2 - 14122012
+v0
 
 Why do this?
 ------------
-tagtool doesn't cut it and neither does any other music tagging program; so I made a GTK3 ID3v2.4 compatible replacement.
+I use this as a quick launch window for remote desktop connections
 
 
 About
 -----
-This is a program to bring all the requirements of managing music files together into one program.
-I have written a lot of music and file organisation programs for myself and the major software in this area just doesn't fit my needs.
-
-
-Features other taggers don't have
----------------------------------
- * Fast and simple file tagging process
- * set tags and organise files according to their tag in a fast and easy way.
+Run executable files from a list
 
 
 Recent Updates
 --------------
- * Added ctrl + s/l/b/h shortcuts
- * Automatically tick checkboxes when typing in tag fields
- * Added backspace to folder navigation (go back one folder)
- * Corrected threading for GTK3 programs
- * UI and code structure updates
-
-
-Supported output variables
---------------------------
-%title% - Track title
-%artist% - Track artist
-%albumartist% - Album artist
-%album% - Album title
-%year% - Album release year
-%disc% - Disc number
-%track% - Track number
-%genre% - Track Genre
-%comment% - Track Comment
-
-*NOTE: %albumartist% will fall back to artist when not available.
-       This has been the best way I've found to manage multiple
-       artist CD's/
-
-
-Organisation example
---------------------
- * Output Style: %albumartist%/%year% %album%/%disc%-%track% - %title%
- * Input: /music/new/spawn soundtrack/01 - filter & the crystal method - trip like i do.mp3
-
-No album artist set:
- * Output: /music/Filter & the Crystal Method/1997 Spawn/1-01 - Can't You (Trip Like I Do).mp3
-Set Album Artist to 'Various':
- * Output: /music/Various/1997 Spawn/1-01 - Can't You (Trip Like I Do).mp3
+ * none
 
 
 Shortcuts
 ---------
-ctrl + b - Go back one folder
-ctrl + h - Go to home folder
-ctrl + l - Load current selection
-ctrl + s - Save current tag changes
-
+ * none
 
 Requires
 --------
  * python 2.7
- * python-eyed3
  * gnome-icon-theme
 
 
 Links
 -----
-* https://github.com/lachlan-00/mytag
+* https://github.com/lachlan-00/quickwin
