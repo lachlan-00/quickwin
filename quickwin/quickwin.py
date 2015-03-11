@@ -76,7 +76,7 @@ class QUICKWIN(object):
         self.addimage = self.builder.get_object('addimage')
         self.settingsbutton = self.builder.get_object('settingsbutton')
         self.closemain = self.builder.get_object('closemain')
-        self.fileview = self.builder.get_object('fileview')
+        #self.fileview = self.builder.get_object('fileview')
         self.contentlist = self.builder.get_object('filestore')
         self.contenttree = self.builder.get_object('fileview')
         self.popmenu = self.builder.get_object('popmenu')
@@ -118,8 +118,10 @@ class QUICKWIN(object):
         # set up file and folder lists
         cell = Gtk.CellRendererText()
         filecolumn = Gtk.TreeViewColumn('Windows Servers', cell, text=0)
-        self.fileview.connect('row-activated', self.loadselection)
-        self.fileview.connect('button-release-event', self.button)
+        #self.fileview.connect('row-activated', self.loadselection)
+        #self.fileview.connect('button-release-event', self.button)
+        self.contenttree.connect('row-activated', self.loadselection)
+        self.contenttree.connect('button-release-event', self.button)
         self.contenttree.append_column(filecolumn)
         self.contenttree.set_model(self.contentlist)
 
@@ -136,15 +138,15 @@ class QUICKWIN(object):
 
     def button(self, actor, event):
         """ Catch mouse clicks"""
-        #if Gdk.ModifierType.BUTTON1_MASK == event.get_state():
-        #    # not used for loading
-        #    # require double clicks self.loadselection()
-        if Gdk.ModifierType.BUTTON2_MASK == event.get_state():
-            print('middle click')
-        elif Gdk.ModifierType.BUTTON3_MASK == event.get_state():
-            print('right click')
-            #self.popmenu.popup()
-        return actor
+        if actor == self.contenttree:
+            if Gdk.ModifierType.BUTTON2_MASK == event.get_state():
+                print('middle click')
+                return actor
+            elif Gdk.ModifierType.BUTTON3_MASK == event.get_state():
+                print('right click')
+                return actor
+                #self.popmenu.popup()
+        return
 
     def showme(self, *args):
         """ show a Gtk.Window """
