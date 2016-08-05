@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-#-*- coding: utf-8 -*-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 """ quickrdp: Python rdp launcher
     ----------------Authors----------------
@@ -24,24 +24,22 @@
 
 import os
 import subprocess
-import sys
+# import sys
+import gi
 
-#ConfigParser renamed for python3
-try:
-    import ConfigParser
-except ImportError:
-    import configparser as ConfigParser
+# ConfigParser renamed for python3
+# try:
+#     import ConfigParser
+# except ImportError:
+#     import configparser as ConfigParser
+import configparser
+
+gi.require_version('Gtk', '3.0')
 
 from gi.repository import Gtk
 from gi.repository import Gdk
 
 from xdg.BaseDirectory import xdg_config_dirs
-
-
-# quit if using python3
-if sys.version[0] == 3:
-    raise Exception('not python3 compatible, please use python 2.x')
-
 
 CONFIG = xdg_config_dirs[0] + '/quickwin.conf'
 UI_FILE = '/usr/share/quickwin/main.ui'
@@ -49,21 +47,38 @@ ICON_DIR = '/usr/share/icons/gnome/'
 USER_HOME = os.getenv('HOME')
 QUICK_STORE = USER_HOME + '/.local/share/quickwin'
 
+
 #        while Gtk.events_pending():
 #            Gtk.main_iteration()
 #        return destin
 
 
+def checkconfig():
+    """ create a default config if not available """
+    if not os.path.isfile(CONFIG):
+        conffile = open(CONFIG, "w")
+        conffile.write('[conf]\nhome = ' + QUICK_STORE + '\n')
+        conffile.close()
+    return
+
+
+def saveadd(*args):
+    """ save any config changes and update live settings"""
+    print("SAVE ADD")
+    return args
+
+
 class QUICKWIN(object):
     """ load and launch rdesktop shortcuts. """
+
     def __init__(self):
         """ start quickrdp """
         self.builder = Gtk.Builder()
         self.builder.add_from_file(UI_FILE)
         self.builder.connect_signals(self)
         # get config info
-        self.checkconfig()
-        self.conf = ConfigParser.RawConfigParser()
+        checkconfig()
+        self.conf = configparser.RawConfigParser()
         self.conf.read(CONFIG)
         self.homefolder = self.conf.get('conf', 'home')
         # backwards compatability for new config options
@@ -76,7 +91,7 @@ class QUICKWIN(object):
         self.addimage = self.builder.get_object('addimage')
         self.settingsbutton = self.builder.get_object('settingsbutton')
         self.closemain = self.builder.get_object('closemain')
-        #self.fileview = self.builder.get_object('fileview')
+        # self.fileview = self.builder.get_object('fileview')
         self.contentlist = self.builder.get_object('filestore')
         self.contenttree = self.builder.get_object('fileview')
         self.popmenu = self.builder.get_object('popmenu')
@@ -101,25 +116,25 @@ class QUICKWIN(object):
         """ connect all the window wisgets """
         # main window actions
         self.window.connect('destroy', self.quit)
-        #self.window.connect('key-release-event', self.shortcatch)
+        # self.window.connect('key-release-event', self.shortcatch)
         self.settingsbutton.connect('clicked', self.showconfig)
         self.addbutton.connect('clicked', self.showaddconnection)
         self.closemain.connect('clicked', self.quit)
-        #images
+        # images
         self.addimage.set_from_file(ICON_DIR + '16x16/actions/add.png')
         # config window actions
         self.applybutton.connect('clicked', self.saveconf)
         self.closebutton.connect('clicked', self.closeconf)
         # add window actions
-        self.saveaddbutton.connect('clicked', self.saveadd)
+        self.saveaddbutton.connect('clicked', saveadd)
         self.closeaddbutton.connect('clicked', self.closeadd)
         # popup window actions
         self.popbutton.connect('clicked', self.closepop)
         # set up file and folder lists
         cell = Gtk.CellRendererText()
         filecolumn = Gtk.TreeViewColumn('Windows Servers', cell, text=0)
-        #self.fileview.connect('row-activated', self.loadselection)
-        #self.fileview.connect('button-release-event', self.button)
+        # self.fileview.connect('row-activated', self.loadselection)
+        # self.fileview.connect('button-release-event', self.button)
         self.contenttree.connect('row-activated', self.loadselection)
         self.contenttree.connect('button-release-event', self.button)
         self.contenttree.append_column(filecolumn)
@@ -145,7 +160,7 @@ class QUICKWIN(object):
             elif Gdk.ModifierType.BUTTON3_MASK == event.get_state():
                 print('right click')
                 return actor
-                #self.popmenu.popup()
+                # self.popmenu.popup()
         return
 
     def showme(self, *args):
@@ -180,19 +195,6 @@ class QUICKWIN(object):
             # write to conf file
             conffile = open(CONFIG, "w")
             self.conf.write(conffile)
-            conffile.close()
-        return
-
-    def saveadd(self, *args):
-        """ save any config changes and update live settings"""
-        print("SAVE ADD")
-        return args
-
-    def checkconfig(self):
-        """ create a default config if not available """
-        if not os.path.isfile(CONFIG):
-            conffile = open(CONFIG, "w")
-            conffile.write('[conf]\nhome = ' + QUICK_STORE + '\n')
             conffile.close()
         return
 
@@ -233,7 +235,7 @@ class QUICKWIN(object):
             self.listfiles(self.current_dir)
         return
 
-    #def shortcatch(self, actor, event):
+    # def shortcatch(self, actor, event):
     #    """ capture keys for shortcuts """
     #    test_mask = (event.state & Gdk.ModifierType.CONTROL_MASK ==
     #                 Gdk.ModifierType.CONTROL_MASK)

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.18.3 -->
+<!-- Generated with glade 3.20.0 -->
 <interface>
-  <requires lib="gtk+" version="3.0"/>
+  <requires lib="gtk+" version="3.10"/>
   <object class="GtkWindow" id="add_window">
     <property name="width_request">450</property>
     <property name="can_focus">False</property>
@@ -36,7 +36,6 @@
               <object class="GtkLabel" id="addlabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xpad">10</property>
                 <property name="label" translatable="yes">Server Name:</property>
               </object>
               <packing>
@@ -48,7 +47,6 @@
               <object class="GtkLabel" id="cmdlabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xpad">10</property>
                 <property name="label" translatable="yes">Command:</property>
               </object>
               <packing>
@@ -93,7 +91,6 @@
             </child>
             <child>
               <object class="GtkButton" id="saveaddbutton">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -102,7 +99,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="margin_right">1</property>
-                    <property name="pixbuf">/usr/share/icons/gnome/16x16/actions/document-save.png</property>
+                    <property name="stock">gtk-save</property>
                   </object>
                 </child>
               </object>
@@ -115,7 +112,6 @@
             </child>
             <child>
               <object class="GtkButton" id="closeaddbutton">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -123,7 +119,7 @@
                   <object class="GtkImage" id="quitimage5">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="pixbuf">/usr/share/icons/gnome/16x16/actions/gtk-quit.png</property>
+                    <property name="stock">gtk-quit</property>
                   </object>
                 </child>
               </object>
@@ -178,7 +174,6 @@
               <object class="GtkLabel" id="homelabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xpad">10</property>
                 <property name="label" translatable="yes">Home Folder:</property>
               </object>
               <packing>
@@ -250,7 +245,6 @@
               <object class="GtkLabel" id="homelabel1">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xpad">10</property>
                 <property name="label" translatable="yes">Home Folder:</property>
               </object>
               <packing>
@@ -262,7 +256,6 @@
               <object class="GtkLabel" id="homelabel2">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xpad">10</property>
                 <property name="label" translatable="yes">Home Folder:</property>
               </object>
               <packing>
@@ -274,7 +267,6 @@
               <object class="GtkLabel" id="homelabel3">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xpad">10</property>
                 <property name="label" translatable="yes">Home Folder:</property>
               </object>
               <packing>
@@ -286,7 +278,6 @@
               <object class="GtkLabel" id="homelabel4">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xpad">10</property>
                 <property name="label" translatable="yes">Home Folder:</property>
               </object>
               <packing>
@@ -298,7 +289,6 @@
               <object class="GtkLabel" id="homelabel5">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xpad">10</property>
                 <property name="label" translatable="yes">Home Folder:</property>
               </object>
               <packing>
@@ -331,7 +321,6 @@
             </child>
             <child>
               <object class="GtkButton" id="applyconf">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -339,7 +328,7 @@
                   <object class="GtkImage" id="savebuttonimage">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="pixbuf">/usr/share/icons/gnome/16x16/actions/document-save.png</property>
+                    <property name="stock">gtk-save</property>
                   </object>
                 </child>
               </object>
@@ -352,7 +341,6 @@
             </child>
             <child>
               <object class="GtkButton" id="closeconf">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -360,7 +348,7 @@
                   <object class="GtkImage" id="quitimage1">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="pixbuf">/usr/share/icons/gnome/16x16/actions/gtk-quit.png</property>
+                    <property name="stock">gtk-quit</property>
                   </object>
                 </child>
               </object>
@@ -395,7 +383,7 @@
     <property name="default_width">175</property>
     <property name="default_height">350</property>
     <property name="hide_titlebar_when_maximized">True</property>
-    <property name="icon">/usr/share/pixmaps/quickwin.png</property>
+    <property name="icon">/usr/share/icons/gnome/16x16/actions/gtk-quit.png</property>
     <property name="gravity">east</property>
     <child>
       <object class="GtkBox" id="mainbox1">
@@ -408,7 +396,6 @@
             <property name="can_focus">False</property>
             <child>
               <object class="GtkButton" id="addbutton">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -416,7 +403,7 @@
                   <object class="GtkImage" id="addimage">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="pixbuf">/usr/share/icons/gnome/16x16/categories/applications-system.png</property>
+                    <property name="stock">gtk-add</property>
                   </object>
                 </child>
               </object>
@@ -430,7 +417,6 @@
               <object class="GtkLabel" id="titlelabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="xalign">0.0099999997764825821</property>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -440,7 +426,6 @@
             </child>
             <child>
               <object class="GtkButton" id="settingsbutton">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -448,7 +433,7 @@
                   <object class="GtkImage" id="settingsimage">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="pixbuf">/usr/share/icons/gnome/16x16/categories/applications-system.png</property>
+                    <property name="stock">gtk-preferences</property>
                   </object>
                 </child>
               </object>
@@ -460,7 +445,6 @@
             </child>
             <child>
               <object class="GtkButton" id="closemain">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -468,7 +452,7 @@
                   <object class="GtkImage" id="quitimage4">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="pixbuf">/usr/share/icons/gnome/16x16/actions/gtk-quit.png</property>
+                    <property name="stock">gtk-quit</property>
                   </object>
                 </child>
               </object>
@@ -538,7 +522,6 @@
             </child>
             <child>
               <object class="GtkButton" id="closepop">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -546,7 +529,7 @@
                   <object class="GtkImage" id="quitimage2">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="pixbuf">/usr/share/icons/gnome/16x16/actions/gtk-quit.png</property>
+                    <property name="stock">gtk-quit</property>
                   </object>
                 </child>
               </object>
