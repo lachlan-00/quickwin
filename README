@@ -1,7 +1,7 @@
 ---------------------------------------------
 quickWIN: Python file launcher
 ---------------------------------------------
-v0
+v0.1
 
 Why do this?
 ------------
@@ -10,12 +10,18 @@ I use this as a quick launch window for remote desktop connections
 
 About
 -----
-Run executable files from a list. Currently this is used just to execute files located in the quickwin folder (depending on conf file.)
+Run executable files from a list. By default this will execute files located in the quickwin folder.
+Edit the config file or use the settings window to change the default path.
 
 
 Recent Updates
 --------------
- * none
+ * added launch parameters:
+   /t: (custom window title)
+   /f: (custom launcher path)
+   e.g. quickwin /t:"My RDP launchers" /f:/home/user/.quickwin/
+ * added status icon to launcher to allow hiding
+ * updated to python3
 
 
 Shortcuts
@@ -24,7 +30,7 @@ Shortcuts
 
 Requires
 --------
- * python 2.7
+ * python 3
  * gnome-icon-theme
 
 

@@ -22,36 +22,39 @@
 
 """
 
+import configparser
+import gi
 import os
 import subprocess
-# import sys
-import gi
-
-# ConfigParser renamed for python3
-# try:
-#     import ConfigParser
-# except ImportError:
-#     import configparser as ConfigParser
-import configparser
+import sys
 
 gi.require_version('Gtk', '3.0')
 
+# noinspection PyPep8
 from gi.repository import Gtk
+# noinspection PyPep8
 from gi.repository import Gdk
-
+# noinspection PyPep8
 from xdg.BaseDirectory import xdg_config_dirs
 
 CONFIG = xdg_config_dirs[0] + '/quickwin.conf'
 UI_FILE = '/usr/share/quickwin/main.ui'
 ICON_DIR = '/usr/share/icons/gnome/'
+TRAY_ICON = '/usr/share/pixmaps/quickwin.png'
 USER_HOME = os.getenv('HOME')
 QUICK_STORE = USER_HOME + '/.local/share/quickwin'
+CUSTOM_PATH = None
+CUSTOM_TITLE = None
+WINDOWOPEN = True
 
-
-#        while Gtk.events_pending():
-#            Gtk.main_iteration()
-#        return destin
-
+# get custom options from launch arguments
+for arguments in sys.argv:
+    if arguments[:3] == '/f:':
+        print('\nUsing different launch folder: ' + arguments[3:] + '\n')
+        CUSTOM_PATH = arguments[3:]
+    if arguments[:3] == '/t:':
+        print('\nUsing different window title ' + arguments[3:] + '\n')
+        CUSTOM_TITLE = arguments[3:]
 
 def checkconfig():
     """ create a default config if not available """
@@ -62,17 +65,12 @@ def checkconfig():
     return
 
 
-def saveadd(*args):
-    """ save any config changes and update live settings"""
-    print("SAVE ADD")
-    return args
-
-
 class QUICKWIN(object):
     """ load and launch rdesktop shortcuts. """
 
     def __init__(self):
         """ start quickrdp """
+        print(CUSTOM_PATH)
         self.builder = Gtk.Builder()
         self.builder.add_from_file(UI_FILE)
         self.builder.connect_signals(self)
@@ -80,11 +78,19 @@ class QUICKWIN(object):
         checkconfig()
         self.conf = configparser.RawConfigParser()
         self.conf.read(CONFIG)
-        self.homefolder = self.conf.get('conf', 'home')
+        if CUSTOM_PATH:
+            print('\nusing custom path')
+            self.homefolder = CUSTOM_PATH
+        else:
+            self.homefolder = self.conf.get('conf', 'home')
         # backwards compatability for new config options
         self.current_dir = self.homefolder
         self.current_files = None
         self.filelist = None
+        # Make a status icon
+        self.statusicon = Gtk.StatusIcon.new_from_file(TRAY_ICON)
+        self.statusicon.connect('activate', self.status_clicked)
+        self.statusicon.set_tooltip_text("Watch My Folder")
         # load main window items
         self.window = self.builder.get_object('main_window')
         self.addbutton = self.builder.get_object('addbutton')
@@ -97,6 +103,8 @@ class QUICKWIN(object):
         self.popmenu = self.builder.get_object('popmenu')
         # load add connection window items
         self.addwindow = self.builder.get_object('add_window')
+        self.addentry = self.builder.get_object('addentry')
+        self.addcommand = self.builder.get_object('cmdentry')
         self.saveaddbutton = self.builder.get_object('saveaddbutton')
         self.closeaddbutton = self.builder.get_object('closeaddbutton')
         # load config window items
@@ -126,19 +134,21 @@ class QUICKWIN(object):
         self.applybutton.connect('clicked', self.saveconf)
         self.closebutton.connect('clicked', self.closeconf)
         # add window actions
-        self.saveaddbutton.connect('clicked', saveadd)
+        self.saveaddbutton.connect('clicked', self.saveadd)
         self.closeaddbutton.connect('clicked', self.closeadd)
         # popup window actions
         self.popbutton.connect('clicked', self.closepop)
         # set up file and folder lists
         cell = Gtk.CellRendererText()
-        filecolumn = Gtk.TreeViewColumn('Windows Servers', cell, text=0)
+        filecolumn = Gtk.TreeViewColumn('Scripts and Launchers', cell, text=0)
         # self.fileview.connect('row-activated', self.loadselection)
         # self.fileview.connect('button-release-event', self.button)
         self.contenttree.connect('row-activated', self.loadselection)
         self.contenttree.connect('button-release-event', self.button)
         self.contenttree.append_column(filecolumn)
         self.contenttree.set_model(self.contentlist)
+        if CUSTOM_TITLE:
+            self.window.set_title(CUSTOM_TITLE)
 
         # list default dir on startup
         if not os.path.isdir(self.homefolder):
@@ -173,6 +183,24 @@ class QUICKWIN(object):
         self.listfiles(self.current_dir)
         args[0].hide()
 
+    def status_clicked(self, status):
+        """ hide and unhide the window when clicking the status icon """
+        global WINDOWOPEN
+        # Unhide the window
+        if not WINDOWOPEN:
+            self.window.show_all()
+            WINDOWOPEN = True
+        elif WINDOWOPEN:
+            self.delete_event(self, self.window)
+
+    def delete_event(self, window, event):
+        """ Hide the window then the close button is clicked """
+        global WINDOWOPEN
+        # Don't delete; hide instead
+        self.window.hide_on_delete()
+        WINDOWOPEN = False
+        return True
+
     def showconfig(self, actor):
         """ fill and show the config window """
         if actor == self.settingsbutton:
@@ -198,6 +226,13 @@ class QUICKWIN(object):
             conffile.close()
         return
 
+    def saveadd(self, *args):
+        """ save any config changes and update live settings"""
+        print("SAVE ADD")
+        print(self.addentry.get_text())
+        print(self.addcommand.get_text())
+        return args
+
     def closeconf(self, actor):
         """ hide the config window """
         if actor == self.closebutton:
@@ -205,7 +240,8 @@ class QUICKWIN(object):
         return
 
     def closeadd(self, actor):
-        """ hide the config window """
+        """ refresh the file list and hide the config window """
+        self.listfiles(self.current_dir)
         if actor == self.closeaddbutton:
             self.hideme(self.addwindow)
         return
@@ -222,13 +258,16 @@ class QUICKWIN(object):
         model, fileiter = contenttree.get_selection().get_selected_rows()
         self.current_files = []
         for files in fileiter:
-            if model[files][0] == '[No RDP shortcuts found]':
+            if model[files][0] == '[No files found]':
                 self.current_files = []
             else:
                 tmp_file = self.current_dir + '/' + model[files][0]
-                self.current_files.append(tmp_file)
+                if os.access(tmp_file, os.X_OK):
+                    self.current_files.append(tmp_file)
+                else:
+                    print(tmp_file + '\nIs not executable')
         if not self.current_files == []:
-            print("OPEN RDP CONNECTION")
+            print("Opening selected file")
             subprocess.Popen(self.current_files)
         else:
             print('relisting directory')
@@ -252,6 +291,8 @@ class QUICKWIN(object):
     def listfiles(self, srcpath):
         """ function to fill the file list column """
         self.current_files = []
+        if CUSTOM_PATH:
+            srcpath = CUSTOM_PATH
         try:
             files_dir = os.listdir(srcpath)
             files_dir.sort(key=lambda y: y.lower())
@@ -266,11 +307,15 @@ class QUICKWIN(object):
             self.contenttree.remove(items.iter)
         # search the supplied directory for items
         for items in files_dir:
-            test_file = os.path.isfile(self.current_dir + '/' + items)
-            if not items[0] == '.' and test_file:
+            test_executable = None
+            tmp_file = self.current_dir + '/' + items
+            test_file = os.path.isfile(tmp_file)
+            if test_file:
+                test_executable = os.access(tmp_file, os.X_OK)
+            if not items[0] == '.' and test_file and test_executable:
                 self.contentlist.append([items])
         if len(self.contentlist) == 0:
-            self.contentlist.append(['[No RDP shortcuts found]'])
+            self.contentlist.append(['[No files found]'])
         return
 
 
