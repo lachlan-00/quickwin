@@ -39,13 +39,15 @@ from xdg.BaseDirectory import xdg_config_dirs
 
 CONFIG = xdg_config_dirs[0] + '/quickwin.conf'
 UI_FILE = '/usr/share/quickwin/main.ui'
+#UI_FILE = './main.ui'
 ICON_DIR = '/usr/share/icons/gnome/'
 TRAY_ICON = '/usr/share/pixmaps/quickwin.png'
 USER_HOME = os.getenv('HOME')
 QUICK_STORE = USER_HOME + '/.local/share/quickwin'
 CUSTOM_PATH = None
 CUSTOM_TITLE = None
-WINDOWOPEN = True
+WINDOWOPEN = False
+WINDOWSPOSITION = None
 
 # get custom options from launch arguments
 for arguments in sys.argv:
@@ -56,11 +58,16 @@ for arguments in sys.argv:
         print('\nUsing different window title ' + arguments[3:] + '\n')
         CUSTOM_TITLE = arguments[3:]
 
+
 def checkconfig():
     """ create a default config if not available """
     if not os.path.isfile(CONFIG):
         conffile = open(CONFIG, "w")
-        conffile.write('[conf]\nhome = ' + QUICK_STORE + '\n')
+        conffile.write('[conf]\nhome = ' + QUICK_STORE + '\n' +
+                       'root_x = \n' +
+                       'root_y = \n' +
+                       'width = \n' +
+                       'height = \n')
         conffile.close()
     return
 
@@ -70,7 +77,6 @@ class QUICKWIN(object):
 
     def __init__(self):
         """ start quickrdp """
-        print(CUSTOM_PATH)
         self.builder = Gtk.Builder()
         self.builder.add_from_file(UI_FILE)
         self.builder.connect_signals(self)
@@ -90,9 +96,15 @@ class QUICKWIN(object):
         # Make a status icon
         self.statusicon = Gtk.StatusIcon.new_from_file(TRAY_ICON)
         self.statusicon.connect('activate', self.status_clicked)
-        self.statusicon.set_tooltip_text("Watch My Folder")
+        self.statusicon.connect('popup-menu', self.right_click_event)
+        if CUSTOM_TITLE:
+            self.statusicon.set_tooltip_text(CUSTOM_TITLE)
+        else:
+            self.statusicon.set_tooltip_text("quickwin")
         # load main window items
         self.window = self.builder.get_object('main_window')
+        #self.window.set_parent(self.statusicon)
+        #self.window.set_modal(True)
         self.addbutton = self.builder.get_object('addbutton')
         self.addimage = self.builder.get_object('addimage')
         self.settingsbutton = self.builder.get_object('settingsbutton')
@@ -157,8 +169,10 @@ class QUICKWIN(object):
 
     def run(self):
         """ show the main window and start the main GTK loop """
-        self.window.set_position(Gtk.Align.END)
-        self.showme(self.window)
+        #self.window.set_position(Gtk.Align.END)
+        self.window.move(int(self.conf.get('conf', 'root_x')), int(self.conf.get('conf', 'root_y')))
+        self.window.resize(int(self.conf.get('conf', 'width')), int(self.conf.get('conf', 'height')))
+        #self.showme(self.window)
         Gtk.main()
 
     def button(self, actor, event):
@@ -170,7 +184,6 @@ class QUICKWIN(object):
             elif Gdk.ModifierType.BUTTON3_MASK == event.get_state():
                 print('right click')
                 return actor
-                # self.popmenu.popup()
         return
 
     def showme(self, *args):
@@ -183,20 +196,48 @@ class QUICKWIN(object):
         self.listfiles(self.current_dir)
         args[0].hide()
 
+    def right_click_event(self, icon, button, time):
+        self.menu = Gtk.Menu()
+
+        quit = Gtk.MenuItem()
+        quit.set_label("Quit")
+
+        quit.connect("activate", Gtk.main_quit)
+
+        self.menu.append(quit)
+        self.menu.show_all()
+
+        def pos(self, button, menu, icon):
+                return (Gtk.StatusIcon.position_menu(self, button, menu, icon))
+
+        self.menu.popup(None, None, pos, self.statusicon, button, time)
+
     def status_clicked(self, status):
         """ hide and unhide the window when clicking the status icon """
         global WINDOWOPEN
         # Unhide the window
+        #print(dir(self.statusicon))
         if not WINDOWOPEN:
-            self.window.show_all()
+            self.window.show()
+            #self.window.do_popup_menu()
+            #self.window.popup()
             WINDOWOPEN = True
+            # save window position
+            self.conf.set('conf', 'root_x', self.window.get_position().root_x)
+            self.conf.set('conf', 'root_y', self.window.get_position().root_y)
+            self.conf.set('conf', 'width', self.window.get_size().width)
+            self.conf.set('conf', 'height', self.window.get_size().height)
+            self.writeconf()
         elif WINDOWOPEN:
             self.delete_event(self, self.window)
+        return status
 
     def delete_event(self, window, event):
         """ Hide the window then the close button is clicked """
         global WINDOWOPEN
         # Don't delete; hide instead
+        print(window)
+        print(event)
         self.window.hide_on_delete()
         WINDOWOPEN = False
         return True
@@ -214,16 +255,20 @@ class QUICKWIN(object):
         self.showme(self.addwindow)
         return actor
 
+    def writeconf(self):
+        """ write to conf file """
+        conffile = open(CONFIG, "w")
+        self.conf.write(conffile)
+        conffile.close()
+        return
+
     def saveconf(self, actor):
         """ save any config changes and update live settings"""
         if actor == self.applybutton:
             self.conf.read(CONFIG)
             self.conf.set('conf', 'home', self.homeentry.get_text())
             self.homefolder = self.homeentry.get_text()
-            # write to conf file
-            conffile = open(CONFIG, "w")
-            self.conf.write(conffile)
-            conffile.close()
+            self.writeconf()
         return
 
     def saveadd(self, *args):
@@ -282,6 +327,7 @@ class QUICKWIN(object):
 
     def quit(self, *args):
         """ stop the process thread and close the program"""
+        # destroy windows and quit
         self.addwindow.destroy()
         self.confwindow.destroy()
         self.window.destroy()
@@ -314,6 +360,7 @@ class QUICKWIN(object):
                 test_executable = os.access(tmp_file, os.X_OK)
             if not items[0] == '.' and test_file and test_executable:
                 self.contentlist.append([items])
+                # self.popmenu.append(Gtk.MenuItem(items))
         if len(self.contentlist) == 0:
             self.contentlist.append(['[No files found]'])
         return
