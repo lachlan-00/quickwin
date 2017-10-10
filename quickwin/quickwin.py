@@ -42,6 +42,9 @@ UI_FILE = '/usr/share/quickwin/main.ui'
 #UI_FILE = './main.ui'
 ICON_DIR = '/usr/share/icons/gnome/'
 TRAY_ICON = '/usr/share/pixmaps/quickwin.png'
+#TRAY_ICON = '/usr/share/icons/gnome/scalable/actions/system-run-symbolic.svg'
+#TRAY_ICON = '/usr/share/icons/gnome/32x32/actions/system-run.png'
+CUSTOM_ICON = None
 USER_HOME = os.getenv('HOME')
 QUICK_STORE = USER_HOME + '/.local/share/quickwin'
 CUSTOM_PATH = None
@@ -57,6 +60,12 @@ for arguments in sys.argv:
     if arguments[:3] == '/t:':
         print('\nUsing different window title ' + arguments[3:] + '\n')
         CUSTOM_TITLE = arguments[3:]
+    if arguments[:3] == '/i:':
+        print('\nUsing a custom icon ' + arguments[3:] + '\n')
+        CUSTOM_ICON = arguments[3:]
+    if arguments[:3] == '/c:':
+        print('\nUsing different config location: ' + arguments[3:] + '\n')
+        CONFIG = arguments[3:]
 
 
 def checkconfig():
@@ -69,11 +78,24 @@ def checkconfig():
                        'width = \n' +
                        'height = \n')
         conffile.close()
+    else:
+        conf = configparser.RawConfigParser()
+        conf.read(CONFIG)
+        if not conf.has_section('home'):
+            conf.add_section('home')
+        if not conf.has_section('root_x'):
+            conf.add_section('root_x')
+        if not conf.has_section('root_y'):
+            conf.add_section('root_y')
+        if not conf.has_section('width'):
+            conf.add_section('width')
+        if not conf.has_section('height'):
+            conf.add_section('height')
     return
 
 
 class QUICKWIN(object):
-    """ load and launch rdesktop shortcuts. """
+    """ load and launch *.desktop shortcuts. """
 
     def __init__(self):
         """ start quickrdp """
@@ -81,8 +103,8 @@ class QUICKWIN(object):
         self.builder.add_from_file(UI_FILE)
         self.builder.connect_signals(self)
         # get config info
-        checkconfig()
         self.conf = configparser.RawConfigParser()
+        checkconfig()
         self.conf.read(CONFIG)
         if CUSTOM_PATH:
             print('\nusing custom path')
@@ -94,7 +116,11 @@ class QUICKWIN(object):
         self.current_files = None
         self.filelist = None
         # Make a status icon
-        self.statusicon = Gtk.StatusIcon.new_from_file(TRAY_ICON)
+        # Set custom icon
+        if CUSTOM_ICON:
+            self.statusicon = Gtk.StatusIcon.new_from_file(CUSTOM_ICON)
+        else:
+            self.statusicon = Gtk.StatusIcon.new_from_file(TRAY_ICON)
         self.statusicon.connect('activate', self.status_clicked)
         self.statusicon.connect('popup-menu', self.right_click_event)
         if CUSTOM_TITLE:
@@ -112,7 +138,6 @@ class QUICKWIN(object):
         # self.fileview = self.builder.get_object('fileview')
         self.contentlist = self.builder.get_object('filestore')
         self.contenttree = self.builder.get_object('fileview')
-        self.popmenu = self.builder.get_object('popmenu')
         # load add connection window items
         self.addwindow = self.builder.get_object('add_window')
         self.addentry = self.builder.get_object('addentry')
@@ -170,8 +195,15 @@ class QUICKWIN(object):
     def run(self):
         """ show the main window and start the main GTK loop """
         #self.window.set_position(Gtk.Align.END)
-        self.window.move(int(self.conf.get('conf', 'root_x')), int(self.conf.get('conf', 'root_y')))
-        self.window.resize(int(self.conf.get('conf', 'width')), int(self.conf.get('conf', 'height')))
+        try:
+            self.window.move(int(self.conf.get('conf', 'root_x')), int(self.conf.get('conf', 'root_y')))
+            self.window.resize(int(self.conf.get('conf', 'width')), int(self.conf.get('conf', 'height')))
+        except ValueError:
+            # incorrect value for setting
+            pass
+        except configparser.NoOptionError:
+            # config missing value
+            pass
         #self.showme(self.window)
         Gtk.main()
 
@@ -236,8 +268,8 @@ class QUICKWIN(object):
         """ Hide the window then the close button is clicked """
         global WINDOWOPEN
         # Don't delete; hide instead
-        print(window)
-        print(event)
+        #print(window)
+        #print(event)
         self.window.hide_on_delete()
         WINDOWOPEN = False
         return True
@@ -306,13 +338,14 @@ class QUICKWIN(object):
             if model[files][0] == '[No files found]':
                 self.current_files = []
             else:
-                tmp_file = self.current_dir + '/' + model[files][0]
+                tmp_file = os.path.join(self.current_dir, model[files][0])
                 if os.access(tmp_file, os.X_OK):
                     self.current_files.append(tmp_file)
                 else:
                     print(tmp_file + '\nIs not executable')
         if not self.current_files == []:
             print("Opening selected file")
+            print(self.current_files)
             subprocess.Popen(self.current_files)
         else:
             print('relisting directory')
@@ -360,7 +393,6 @@ class QUICKWIN(object):
                 test_executable = os.access(tmp_file, os.X_OK)
             if not items[0] == '.' and test_file and test_executable:
                 self.contentlist.append([items])
-                # self.popmenu.append(Gtk.MenuItem(items))
         if len(self.contentlist) == 0:
             self.contentlist.append(['[No files found]'])
         return
