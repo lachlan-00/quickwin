@@ -39,11 +39,8 @@ from xdg.BaseDirectory import xdg_config_dirs
 
 CONFIG = xdg_config_dirs[0] + '/quickwin.conf'
 UI_FILE = '/usr/share/quickwin/main.ui'
-#UI_FILE = './main.ui'
 ICON_DIR = '/usr/share/icons/gnome/'
 TRAY_ICON = '/usr/share/pixmaps/quickwin.png'
-#TRAY_ICON = '/usr/share/icons/gnome/scalable/actions/system-run-symbolic.svg'
-#TRAY_ICON = '/usr/share/icons/gnome/32x32/actions/system-run.png'
 CUSTOM_ICON = None
 USER_HOME = os.getenv('HOME')
 QUICK_STORE = USER_HOME + '/.local/share/quickwin'
@@ -129,8 +126,6 @@ class QUICKWIN(object):
             self.statusicon.set_tooltip_text("quickwin")
         # load main window items
         self.window = self.builder.get_object('main_window')
-        #self.window.set_parent(self.statusicon)
-        #self.window.set_modal(True)
         self.addbutton = self.builder.get_object('addbutton')
         self.addimage = self.builder.get_object('addimage')
         self.settingsbutton = self.builder.get_object('settingsbutton')
@@ -161,12 +156,10 @@ class QUICKWIN(object):
         """ connect all the window wisgets """
         # main window actions
         self.window.connect('destroy', self.quit)
-        # self.window.connect('key-release-event', self.shortcatch)
+        self.window.connect('drag-end', self.save_position)
         self.settingsbutton.connect('clicked', self.showconfig)
         self.addbutton.connect('clicked', self.showaddconnection)
         self.closemain.connect('clicked', self.quit)
-        # images
-        self.addimage.set_from_file(ICON_DIR + '16x16/actions/add.png')
         # config window actions
         self.applybutton.connect('clicked', self.saveconf)
         self.closebutton.connect('clicked', self.closeconf)
@@ -178,8 +171,6 @@ class QUICKWIN(object):
         # set up file and folder lists
         cell = Gtk.CellRendererText()
         filecolumn = Gtk.TreeViewColumn('Scripts and Launchers', cell, text=0)
-        # self.fileview.connect('row-activated', self.loadselection)
-        # self.fileview.connect('button-release-event', self.button)
         self.contenttree.connect('row-activated', self.loadselection)
         self.contenttree.connect('button-release-event', self.button)
         self.contenttree.append_column(filecolumn)
@@ -194,17 +185,7 @@ class QUICKWIN(object):
 
     def run(self):
         """ show the main window and start the main GTK loop """
-        #self.window.set_position(Gtk.Align.END)
-        try:
-            self.window.move(int(self.conf.get('conf', 'root_x')), int(self.conf.get('conf', 'root_y')))
-            self.window.resize(int(self.conf.get('conf', 'width')), int(self.conf.get('conf', 'height')))
-        except ValueError:
-            # incorrect value for setting
-            pass
-        except configparser.NoOptionError:
-            # config missing value
-            pass
-        #self.showme(self.window)
+        self.set_position()
         Gtk.main()
 
     def button(self, actor, event):
@@ -250,26 +231,39 @@ class QUICKWIN(object):
         # Unhide the window
         #print(dir(self.statusicon))
         if not WINDOWOPEN:
+            self.set_position()
             self.window.show()
-            #self.window.do_popup_menu()
-            #self.window.popup()
             WINDOWOPEN = True
             # save window position
-            self.conf.set('conf', 'root_x', self.window.get_position().root_x)
-            self.conf.set('conf', 'root_y', self.window.get_position().root_y)
-            self.conf.set('conf', 'width', self.window.get_size().width)
-            self.conf.set('conf', 'height', self.window.get_size().height)
-            self.writeconf()
         elif WINDOWOPEN:
             self.delete_event(self, self.window)
         return status
+
+    def set_position(self):
+        """ move the main window to last known position """
+        try:
+            self.window.move(int(self.conf.get('conf', 'root_x')), int(self.conf.get('conf', 'root_y')))
+            self.window.resize(int(self.conf.get('conf', 'width')), int(self.conf.get('conf', 'height')))
+        except ValueError:
+            # incorrect value for setting
+            pass
+        return
+
+    def save_position(self):
+        """ save the main window position """
+        self.conf.set('conf', 'root_x', self.window.get_position().root_x)
+        self.conf.set('conf', 'root_y', self.window.get_position().root_y)
+        self.conf.set('conf', 'width', self.window.get_size().width)
+        self.conf.set('conf', 'height', self.window.get_size().height)
+        self.writeconf()
+        self.conf.read(CONFIG)
+        return
 
     def delete_event(self, window, event):
         """ Hide the window then the close button is clicked """
         global WINDOWOPEN
         # Don't delete; hide instead
-        #print(window)
-        #print(event)
+        self.save_position()
         self.window.hide_on_delete()
         WINDOWOPEN = False
         return True
@@ -351,12 +345,6 @@ class QUICKWIN(object):
             print('relisting directory')
             self.listfiles(self.current_dir)
         return
-
-    # def shortcatch(self, actor, event):
-    #    """ capture keys for shortcuts """
-    #    test_mask = (event.state & Gdk.ModifierType.CONTROL_MASK ==
-    #                 Gdk.ModifierType.CONTROL_MASK)
-    #    #if event.get_state() and test_mask:
 
     def quit(self, *args):
         """ stop the process thread and close the program"""
