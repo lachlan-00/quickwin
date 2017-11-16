@@ -156,11 +156,7 @@ class QUICKWIN(object):
         """ connect all the window wisgets """
         # main window actions
         self.window.connect('destroy', self.quit)
-        self.window.connect('hide', self.save_position)
-        self.window.connect('focus', self.save_position)
-        self.window.connect('window-state-event', self.save_position)
-        self.window.connect('button-release-event', self.save_position)
-        self.window.connect('drag-end', self.save_position)
+        self.window.connect('configure-event', self.save_position)
         self.settingsbutton.connect('clicked', self.showconfig)
         self.addbutton.connect('clicked', self.showaddconnection)
         self.closemain.connect('clicked', self.quit)
@@ -267,6 +263,7 @@ class QUICKWIN(object):
     def delete_event(self, window, event):
         """ Hide the window then the close button is clicked """
         global WINDOWOPEN
+        self.save_position(self.window, 'hiding')
         # Don't delete; hide instead
         self.window.hide_on_delete()
         WINDOWOPEN = False
